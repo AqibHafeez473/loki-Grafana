@@ -1,0 +1,49 @@
+version: '3'
+
+services:
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"  # Grafana Dashboard ko local system pe access karne ke liye
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: 'admin'  # Default Grafana password
+    volumes:
+      - grafana-storage:/var/lib/grafana  # Persistent storage for Grafana
+    networks:
+      - loki-net  # Use the custom network
+    restart: always
+
+  loki:
+    image: grafana/loki:latest
+    container_name: loki
+    command: -config.file=/etc/loki/loki.yaml  # Loki config file ko mount karna
+    ports:
+      - "3100:3100"  # Loki API ko local system pe access karne ke liye
+    volumes:
+      - loki-storage:/loki  # Named volume for Loki data
+      - ./loki-config.yaml:/etc/loki/loki.yaml  # Mounting the Loki config file
+    networks:
+      - loki-net  # Use the custom network
+    restart: always
+
+  promtail:
+    image: grafana/promtail:latest
+    container_name: promtail
+    volumes:
+      - promtail-storage:/loki  # Named volume for Promtail logs
+      - /var/log:/var/log  # Logs ko access karna
+      - /tmp:/tmp  # Temporary directory
+      - ./promtail-config.yaml:/etc/promtail/promtail.yaml  # Mount Promtail config file
+    networks:
+      - loki-net  # Use the custom network
+    restart: always
+
+volumes:
+  grafana-storage:  # Persistent storage volume for Grafana data
+  loki-storage:     # Persistent storage volume for Loki logs
+  promtail-storage: # Persistent storage volume for Promtail logs
+
+networks:
+  loki-net:
+    driver: bridge  # Create a custom isolated bridge network
