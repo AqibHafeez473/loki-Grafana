@@ -16,11 +16,3 @@ scrape_configs:
           job: 'varlogs'
           __path__: /var/log/*.log
 
-# Docker logs for 'api' service
-  - job_name: 'docker-api-service'
-    static_configs:
-      - targets: ['localhost']
-        labels:
-          job: 'docker-api-service'
-          __path__: '/var/lib/docker/containers/*/api*-json.log'
-          
